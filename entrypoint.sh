@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo ::set-output name=tag_generated::0
+echo "tag_generated = 0"
 
 # config
 with_v=${WITH_V:-false}
@@ -20,6 +20,7 @@ for b in "${branch[@]}"; do
     fi
 done
 echo "pre_release = $pre_release"
+git config --global --add safe.directory '*'
 
 # fetch tags
 git fetch --tags
@@ -28,20 +29,20 @@ git fetch --tags
 tag=$(git for-each-ref --sort=-v:refname --count=1 --format '%(refname)' refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-)
 tag_commit=$(git rev-list -n 1 $tag)
 
-echo $tag
+echo "tag = $tag"
 last_major=$(semver get major $tag)
 last_minor=$(semver get minor $tag)
 last_patch=$(semver get patch $tag)
-echo ::set-output name=last_major::$last_major
-echo ::set-output name=last_minor::$last_minor
-echo ::set-output name=last_patch::$last_patch
+echo "last_major = $last_major"
+echo "last_minor = $last_minor"
+echo "last_patch = $last_patch"
 
 # get current commit hash for tag
 commit=$(git rev-parse HEAD)
 
 if [ "$tag_commit" == "$commit" ]; then
     echo "No new commits since previous tag. Skipping the tag creation..."
-    echo ::set-output name=last_tag::$tag
+    echo "last_tag = $tag"
     exit 0
 fi
 
@@ -73,7 +74,7 @@ case "$log" in
         ;;
     * )
         echo "This commit message doesn't include #major, #minor or #patch. Skipping the tag creation..."
-        echo ::set-output name=last_tag::$tag
+        echo "last_tag = $tag"
         exit 0
         ;;
 esac
@@ -104,12 +105,12 @@ minor=$(semver get minor $new)
 patch=$(semver get patch $new)
 
 # set outputs
-echo ::set-output name=last_tag::$tag
-echo ::set-output name=new_tag::$new
-echo ::set-output name=major::$major
-echo ::set-output name=minor::$minor
-echo ::set-output name=patch::$patch
-echo ::set-output name=bump_ver::$bump_ver
+echo "last_tag = $tag"
+echo "new_tag = $new"
+echo "major = $major"
+echo "minor = $minor"
+echo "patch = $patch"
+echo "bump_ver = $bump_ver"
 
 if $pre_release
 then
@@ -133,4 +134,4 @@ curl -s -X POST $git_refs_url \
   "sha": "$commit"
 }
 EOF
-echo ::set-output name=tag_generated::1
+echo "tag_generated = 1"
