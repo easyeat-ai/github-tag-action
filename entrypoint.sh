@@ -59,25 +59,16 @@ echo $log
 
 # get commit logs and determine home to bump the version
 # supports #major, #minor, #patch
-case "$log" in
-    *#major* ) 
-        new=$(semver bump major $tag)
-        bump_ver="major"
-        ;;
-    *#minor* ) 
-        new=$(semver bump minor $tag)
-        bump_ver="minor"
-        ;;
-    *#patch* ) 
-        new=$(semver bump patch $tag)
-        bump_ver="patch"
-        ;;
-    * )
-        echo "This commit message doesn't include #major, #minor or #patch. Skipping the tag creation..."
-        echo "last_tag = $tag"
-        exit 0
-        ;;
-esac
+if [[ "$log" == *#major* ]]; then
+    new=$(semver bump major $tag)
+    bump_ver="major"
+elif [[ "$log" == *#minor* ]]; then
+    new=$(semver bump minor $tag)
+    bump_ver="minor"
+else
+    new=$(semver bump patch $tag)
+    bump_ver="patch"
+fi
 
 # did we get a new tag?
 if [ ! -z "$new" ]
